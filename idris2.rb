@@ -42,8 +42,11 @@ class Idris2 < Formula
     system "make", "clean"
     system "make", "all", *make_overrides
     system "make", "install", *make_overrides
+    system "make", "install-api", *make_overrides
+    system "make", "install-libs", *make_overrides
     system "make", "install-with-src-api", *make_overrides
     system "make", "install-with-src-libs", *make_overrides
+    system "make", "install-libdocs", *make_overrides
 
     bin.install_symlink libexec/"bin/idris2"
     lib.install_symlink Dir["#{libexec}/lib/#{shared_library("*")}"]
