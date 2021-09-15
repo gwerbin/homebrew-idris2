@@ -19,8 +19,10 @@ class Idris2 < Formula
   depends_on "chezscheme"
   depends_on "coreutils"
   on_macos do
-    # Zsh is provided by MacOS on Mojave and later systems. This is in lieu of
-    # `uses_from_macos` which isn't supported in the `on_macos` block.
+    # Zsh is not used at all in the build processes for platforms other than
+    # Mac. Zsh is provided by MacOS on Mojave and later systems. This section
+    # is in lieu of the `uses_from_macos` which isn't supported in the
+    # `on_macos` block.
     depends_on "zsh" => :build if MacOS.version < :mojave
   end
 
@@ -28,13 +30,14 @@ class Idris2 < Formula
     ENV.deparallelize
     scheme = Formula["chezscheme"].bin/"chez"
 
-    # First stage: get an up-to-date compiler
+    # Stage 1: Bootstrap an up-to-date compiler, in a temporary location.
+    mkdir "#{buildpath}/build1"
     system "make", "bootstrap", "SCHEME=#{scheme}", "PREFIX=#{buildpath}/build1"
     system "make", "install", "PREFIX=#{buildpath}/build1"
 
-    # Second stage: to rebuild everything with the new compiler, to support --install-with-src
-    # This is necessary for idris2-lsp, and probably 
-    system "make", "all", "PREFIX=#{libexec}"
+    # Stage 2: Rebuild everything with the new compiler from Stage 1.
+    # This is necessary for Idris2-LSP, and probably other software.
+    system "make", "all", "IDRIS2_BOOT=#{buildpath}/build1/idris2", "PREFIX=#{libexec}"
     system "make", "install", "PREFIX=#{libexec}"
     system "make", "install-with-src-api"
     system "make", "install-with-src-libs"
