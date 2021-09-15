@@ -31,13 +31,14 @@ class Idris2 < Formula
     scheme = Formula["chezscheme"].bin/"chez"
 
     # Stage 1: Bootstrap an up-to-date compiler, in a temporary location.
-    mkdir "#{buildpath}/build1"
-    system "make", "bootstrap", "SCHEME=#{scheme}", "PREFIX=#{buildpath}/build1"
-    system "make", "install", "PREFIX=#{buildpath}/build1"
+    mkdir "#{buildpath}/stage1"
+    system "make", "bootstrap", "SCHEME=#{scheme}", "PREFIX=#{buildpath}/stage1"
+    system "make", "install", "PREFIX=#{buildpath}/stage1"
 
     # Stage 2: Rebuild everything with the new compiler from Stage 1.
     # This is necessary for Idris2-LSP, and probably other software.
-    system "make", "all", "IDRIS2_BOOT=#{buildpath}/build1/idris2", "PREFIX=#{libexec}"
+    system "make", "clean"
+    system "make", "all", "IDRIS2_BOOT=#{buildpath}/stage1/bin/idris2", "PREFIX=#{libexec}"
     system "make", "install", "PREFIX=#{libexec}"
     system "make", "install-with-src-api"
     system "make", "install-with-src-libs"
