@@ -28,20 +28,22 @@ class Idris2 < Formula
 
   def install
     ENV.deparallelize
-    scheme = Formula["chezscheme"].bin/"chez"
 
     # Stage 1: Bootstrap an up-to-date compiler, in a temporary location.
-    mkdir "#{buildpath}/stage1"
-    system "make", "bootstrap", "SCHEME=#{scheme}", "PREFIX=#{buildpath}/stage1"
-    system "make", "install", "PREFIX=#{buildpath}/stage1"
+    scheme_exe = Formula["chezscheme"].bin/"chez"
+    stage1_dir = "#{buildpath}/stage1"
+    mkdir stage1_dir
+    system "make", "bootstrap", "SCHEME=#{scheme_exe}", "PREFIX=#{stage1_dir}"
+    system "make", "install", "PREFIX=#{stage1_dir}"
 
     # Stage 2: Rebuild everything with the new compiler from Stage 1.
     # This is necessary for Idris2-LSP, and probably other software.
+    make_overrides = ["IDRIS2_BOOT=#{stage1_dir}/bin/idris2", "PREFIX=#{libexec}"]
     system "make", "clean"
-    system "make", "all", "IDRIS2_BOOT=#{buildpath}/stage1/bin/idris2", "PREFIX=#{libexec}"
-    system "make", "install", "PREFIX=#{libexec}"
-    system "make", "install-with-src-api"
-    system "make", "install-with-src-libs"
+    system "make", "all", *make_overrides
+    system "make", "install", *make_overrides
+    system "make", "install-with-src-api", *make_overrides
+    system "make", "install-with-src-libs", *make_overrides
 
     bin.install_symlink libexec/"bin/idris2"
     lib.install_symlink Dir["#{libexec}/lib/#{shared_library("*")}"]
