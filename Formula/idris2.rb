@@ -1,8 +1,8 @@
 class Idris2 < Formula
   desc "Pure functional programming language with dependent types"
   homepage "https://www.idris-lang.org/"
-  url "https://github.com/idris-lang/Idris2/archive/v0.4.0.tar.gz"
-  sha256 "e06fb4f59838ca9da286ae3aecfeeeacb8e85afeb2e2136b4b751e06325f95fe"
+  url "https://github.com/idris-lang/Idris2/archive/v0.5.0.tar.gz"
+  sha256 "bfb09e9e71c787f38390343786b6d223524c427fd7c017af7d08605c0d30c2dd"
   license "BSD-3-Clause"
   revision 2
   head "https://github.com/idris-lang/Idris2.git"
@@ -36,7 +36,7 @@ class Idris2 < Formula
     system "make", "bootstrap", "SCHEME=#{scheme_exe}", "PREFIX=#{stage1_dir}"
     system "make", "install", "PREFIX=#{stage1_dir}"
 
-    # Stage 2: Rebuild everything with the new compiler from Stage 1.
+    # Stage 2: Rebuild everything with the new compiler from Stage 1, including the Idris 2 API package.
     # This is necessary for Idris2-LSP, and probably other software.
     make_overrides = ["IDRIS2_BOOT=#{stage1_dir}/bin/idris2", "PREFIX=#{libexec}"]
     system "make", "clean"
