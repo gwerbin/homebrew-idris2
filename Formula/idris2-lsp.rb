@@ -10,7 +10,7 @@ class Idris2Lsp < Formula
   depends_on "idris2"
 
   def install
-    system "make", "install", "PREFIX=${libexec}"
+    system "make", "install", "PREFIX=#{libexec}"
     bin.install_symlink libexec/"bin/idris2-lsp"
   end
 
