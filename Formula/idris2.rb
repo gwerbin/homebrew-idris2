@@ -41,7 +41,6 @@ class Idris2 < Formula
 
     system "make", "bootstrap", "SCHEME=#{scheme_exe}", "PREFIX=#{stage1_dir}"
     system "make", "install", "PREFIX=#{stage1_dir}"
-    system "make", "clean"
 
     ## Stage 2: Rebuild everything with the new compiler from Stage 1, including
     #  the Idris 2 API package. This is necessary for Idris2-LSP, and probably
@@ -56,6 +55,13 @@ class Idris2 < Formula
       ld_library_path = "#{stage1_dir}/lib:#{ld_library_path}"
     end
 
+    # Clean out build artifacts from stage1.
+    system(
+      "make", "clean",
+      "LD_LIBRARY_PATH=#{ld_library_path}",
+      "IDRIS2_BOOT=#{stage1_dir}/bin/idris2",
+    )
+
     # Build the stage2 compiler, using the stage1 compiler.
     # Subsequent targets will use the compiler built by this target, not the
     # stage1 compiler.
@@ -63,28 +69,27 @@ class Idris2 < Formula
     # that hard-codes the install prefix; in subsequent targets, the compiler
     # will get prefix information from this file, not from the PREFIX parameter.
     system(
-      "make",
-      "IDRIS2_BOOT=#{stage1_dir}/bin/idris2",
+      "make", "all",
       "LD_LIBRARY_PATH=#{ld_library_path}",
+      "IDRIS2_BOOT=#{stage1_dir}/bin/idris2",
       "PREFIX=#{prefix}",
-      "all"
     )
 
-    # These targets just use the `install` command, they don't invoke Idris 2.
+    # These targets use the TARGET parameter, which will always be the `idris2`
+    # executable that we just built.
     system "make", "PREFIX=#{prefix}", "install-idris2"
     system "make", "PREFIX=#{prefix}", "install-support"
+    system "make", "PREFIX=#{prefix}", "install-libs"
+    system "make", "PREFIX=#{prefix}", "install-with-src-libs"
 
-    # These targets invoke the Idris 2 compiler that we just built, to install
-    # the standard library packages in the right place.
-    system "make", "install-libs"
-    system "make", "install-with-src-libs"
-    system "make", "install-api"
-    system "make", "install-with-src-api"
+    # These targets use the IDRIS2_BOOT parameter, which will should be the
+    # `idris2` executable that we just built, but is not by default.
+    system "make", "PREFIX=#{prefix}", "IDRIS2_BOOT=build/exec/idris2", "install-api"
+    system "make", "PREFIX=#{prefix}", "IDRIS2_BOOT=build/exec/idris2", "install-with-src-api"
 
-    # This target uses `cp` & `install`, so we need to set PREFIX.
+    # This target uses `cp` & `install`, so we don't need to do anything
+    # special.
     system "make", "PREFIX=#{prefix}", "install-libdocs"
-
-    system "false"
 
     # Make sure the compiler and its shared libraries are available to the rest
     # of the system.
