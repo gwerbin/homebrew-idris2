@@ -74,16 +74,17 @@ class Idris2 < Formula
     system "make", "PREFIX=#{prefix}", "install-idris2"
     system "make", "PREFIX=#{prefix}", "install-support"
 
-    # These targets do invoke the Idris 2 compiler, to install the standard
-    # library packages in the right place. Use IDRIS2_BOOT to make sure that we
-    # are using the compiler we just built.
-    system "make", "IDRIS2_BOOT=#{buildpath/"build/exec/idris2"}", "install-libs"
-    system "make", "IDRIS2_BOOT=#{buildpath/"build/exec/idris2"}", "install-with-src-libs"
-    system "make", "IDRIS2_BOOT=#{buildpath/"build/exec/idris2"}", "install-api"
-    system "make", "IDRIS2_BOOT=#{buildpath/"build/exec/idris2"}", "install-with-src-api"
+    # These targets invoke the Idris 2 compiler that we just built, to install
+    # the standard library packages in the right place.
+    system "make", "install-libs"
+    system "make", "install-with-src-libs"
+    system "make", "install-api"
+    system "make", "install-with-src-api"
 
     # This target uses `cp` & `install`, so we need to set PREFIX.
     system "make", "PREFIX=#{prefix}", "install-libdocs"
+
+    system "false"
 
     # Make sure the compiler and its shared libraries are available to the rest
     # of the system.
