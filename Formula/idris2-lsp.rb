@@ -12,7 +12,6 @@ class Idris2Lsp < Formula
   def install
     system Formula["idris2"].bin/"idris2", "--build", "lsp.ipkg"
     system "make", "install-only", "PREFIX=#{prefix}"
-    bin.install_symlink prefix/"bin/idris2-lsp"
   end
 
   test do

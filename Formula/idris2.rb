@@ -91,11 +91,6 @@ class Idris2 < Formula
     # special.
     system "make", "PREFIX=#{prefix}", "install-libdocs"
 
-    # Make sure the compiler and its shared libraries are available to the rest
-    # of the system.
-    bin.install_symlink prefix/"bin/idris2"
-    lib.install_symlink Dir["#{prefix}/lib/#{shared_library("*")}"]
-
     # Generate and save the Bash completion script.
     (bash_completion/"idris2").write(
       Utils.safe_popen_read(bin/"idris2", "--bash-completion-script", "idris2")
