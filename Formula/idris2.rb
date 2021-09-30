@@ -20,38 +20,80 @@ class Idris2 < Formula
   on_macos do
     # Zsh is not used at all in the build processes for platforms other than
     # Mac. Zsh is provided by MacOS on Mojave and later systems. This section
-    # is in lieu of the `uses_from_macos` which isn't supported in the
+    # is in lieu of the `uses_from_macos`, which isn't supported in the
     # `on_macos` block.
     depends_on "zsh" => :build if MacOS.version < :mojave
   end
 
   def install
+    # Packages need to be built in a specific order.
     ENV.deparallelize
 
-    # Stage 1: Bootstrap an up-to-date compiler, in a temporary location.
+    ## Stage 1: Bootstrap an up-to-date compiler, in a temporary location.
+
     scheme_exe = Formula["chezscheme"].bin/"chez"
+
     stage1_dir = "#{buildpath}/stage1"
     mkdir stage1_dir
+    # stage1_dir = "/Users/gregwerbin/.local/opt/idris2"
+    # # XXX breakpoint XXX
+    # system "false"
+
     system "make", "bootstrap", "SCHEME=#{scheme_exe}", "PREFIX=#{stage1_dir}"
     system "make", "install", "PREFIX=#{stage1_dir}"
-
-    # Stage 2: Rebuild everything with the new compiler from Stage 1, including the Idris 2 API package.
-    # This is necessary for Idris2-LSP, and probably other software.
-    make_overrides = ["IDRIS2_BOOT=#{stage1_dir}/bin/idris2", "PREFIX=#{libexec}"]
     system "make", "clean"
-    system "make", "all", *make_overrides
-    system "make", "install", *make_overrides
-    system "make", "install-api", *make_overrides
-    system "make", "install-libs", *make_overrides
-    system "make", "install-with-src-api", *make_overrides
-    system "make", "install-with-src-libs", *make_overrides
-    system "make", "install-libdocs", *make_overrides
 
-    bin.install_symlink libexec/"bin/idris2"
-    lib.install_symlink Dir["#{libexec}/lib/#{shared_library("*")}"]
+    ## Stage 2: Rebuild everything with the new compiler from Stage 1, including
+    #  the Idris 2 API package. This is necessary for Idris2-LSP, and probably
+    #  other libraries/applications.
 
-    # Install shell completions
-    (bash_completion/"idris2").write Utils.safe_popen_read(bin/"idris2", "--bash-completion-script", "idris2")
+    # We will set LD_LIBRARY_PATH to make sure that the stage1 compiler can
+    # find its own libraries when building the stage2 compiler.
+    ld_library_path = ENV["LD_LIBRARY_PATH"]
+    if ld_library_path == nil
+      ld_library_path = "#{stage1_dir}/lib"
+    else
+      ld_library_path = "#{stage1_dir}/lib:#{ld_library_path}"
+    end
+
+    # Build the stage2 compiler, using the stage1 compiler.
+    # Subsequent targets will use the compiler built by this target, not the
+    # stage1 compiler.
+    # This target also generates the src/IdrisPaths.idr file
+    # that hard-codes the install prefix; in subsequent targets, the compiler
+    # will get prefix information from this file, not from the PREFIX parameter.
+    system(
+      "make",
+      "IDRIS2_BOOT=#{stage1_dir}/bin/idris2",
+      "LD_LIBRARY_PATH=#{ld_library_path}",
+      "PREFIX=#{prefix}",
+      "all"
+    )
+
+    # These targets just use the `install` command, they don't invoke Idris 2.
+    system "make", "PREFIX=#{prefix}", "install-idris2"
+    system "make", "PREFIX=#{prefix}", "install-support"
+
+    # These targets do invoke the Idris 2 compiler, to install the standard
+    # library packages in the right place. Use IDRIS2_BOOT to make sure that we
+    # are using the compiler we just built.
+    system "make", "IDRIS2_BOOT=#{buildpath/"build/exec/idris2"}", "install-libs"
+    system "make", "IDRIS2_BOOT=#{buildpath/"build/exec/idris2"}", "install-with-src-libs"
+    system "make", "IDRIS2_BOOT=#{buildpath/"build/exec/idris2"}", "install-api"
+    system "make", "IDRIS2_BOOT=#{buildpath/"build/exec/idris2"}", "install-with-src-api"
+
+    # This target uses `cp` & `install`, so we need to set PREFIX.
+    system "make", "PREFIX=#{prefix}", "install-libdocs"
+
+    # Make sure the compiler and its shared libraries are available to the rest
+    # of the system.
+    bin.install_symlink prefix/"bin/idris2"
+    lib.install_symlink Dir["#{prefix}/lib/#{shared_library("*")}"]
+
+    # Generate and save the Bash completion script.
+    (bash_completion/"idris2").write(
+      Utils.safe_popen_read(bin/"idris2", "--bash-completion-script", "idris2")
+    )
   end
 
   test do
