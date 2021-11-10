@@ -5,7 +5,7 @@ class Idris2Lsp < Formula
   version "0.0.0-idris2-0.5.1"
   sha256 "f2fa76f1a916c9df8e0e6a1e7ad96738861f21662c91f0209d20ab2c5ba6d889"
   license "BSD-3-Clause"
-  head "https://github.com/idris-community/idris2-lsp.git"
+  head "https://github.com/idris-community/idris2-lsp.git", :branch => "main"
 
   depends_on "idris2"
 
