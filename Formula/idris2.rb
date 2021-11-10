@@ -4,7 +4,7 @@ class Idris2 < Formula
   url "https://github.com/idris-lang/Idris2/archive/v0.5.1.tar.gz"
   sha256 "da44154f6eba5e22ec5ac64c6ba2c28d2df0a57cf620c5b00c11adb51dbda399"
   license "BSD-3-Clause"
-  head "https://github.com/idris-lang/Idris2.git"
+  head "https://github.com/idris-lang/Idris2.git", :branch => "main"
 
   bottle do
     sha256 cellar: :any,                 big_sur:      "3beffca58897ca836c87544b2a4a1096e70cb0e74e50a1a8b43f6aa4c3a41b75"
